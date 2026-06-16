@@ -266,6 +266,7 @@ async function rawPost(body, apiKey) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
         "anthropic-dangerous-direct-browser-access": "true",
         ...(apiKey ? { "x-api-key": apiKey } : {}),
       },
@@ -643,9 +644,11 @@ export default function WorldCup2026Schedule() {
       // Mark done so the auto-update timer doesn't refetch
       if (merged.played && merged.score) merged.done = true;
       setDetails((d) => ({ ...d, [m.id]: merged }));
+      return { ok: !!merged.score, score: merged.score };
     } catch (e) {
       if (!silent) setInfoErr(`${e.message}`);
       logLine(`ERROR: ${e.message}`);
+      return { ok: false, error: e.message };
     } finally {
       if (!silent) setLoadingInfo(false);
     }
@@ -668,15 +671,19 @@ export default function WorldCup2026Schedule() {
     });
     if (pending.length === 0) { setUpdateStatus("All scores up to date ✓"); setTimeout(() => setUpdateStatus(null), 3000); return; }
     setUpdateBusy(true);
-    let done = 0;
-    for (const m of pending) {
-      setUpdateStatus(`Fetching ${done + 1}/${pending.length}…`);
-      try { await fetchDetails(m, { silent: true, force: true }); } catch {}
-      done++;
+    let got = 0, fail = 0, lastErr = null;
+    for (let i = 0; i < pending.length; i++) {
+      setUpdateStatus(`Fetching ${i + 1}/${pending.length}…`);
+      const r = await fetchDetails(pending[i], { silent: true, force: true });
+      if (r && r.ok) got++;
+      else { fail++; if (r && r.error) lastErr = r.error; }
     }
     setUpdateBusy(false);
-    setUpdateStatus(`Updated ${done} match${done !== 1 ? "es" : ""} ✓`);
-    setTimeout(() => setUpdateStatus(null), 4000);
+    setUpdateStatus(
+      lastErr ? `Error: ${lastErr}`
+      : `Got ${got} score${got !== 1 ? "s" : ""}${fail ? `, ${fail} not finished` : ""} ✓`
+    );
+    setTimeout(() => setUpdateStatus(null), 8000);
   }, [updateBusy, details, fetchDetails]);
 
   // AUTO-UPDATE: every 5 minutes, find matches that finished (kickoff + 2.5h)
