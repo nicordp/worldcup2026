@@ -295,13 +295,15 @@ function sealContent(content) {
 }
 
 // Web-search-enabled conversation that follows pause_turn until text arrives.
-async function runSearch(prompt, onLog, apiKey) {
+// maxUses caps how many web searches accumulate — fewer = lower input-token
+// usage, which matters on low API tiers (30k input tokens/min).
+async function runSearch(prompt, onLog, apiKey, maxUses = 5) {
   let messages = [{ role: "user", content: prompt }];
   for (let turn = 0; turn < 8; turn++) {
     onLog(`search ${turn + 1}…`);
     const data = await rawPost({
       messages,
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6 }],
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: maxUses }],
     }, apiKey);
     const types = (data.content || []).map(b => b.type).join(",");
     onLog(`${data.stop_reason} [${types}]`);
@@ -317,10 +319,10 @@ async function runSearch(prompt, onLog, apiKey) {
 }
 
 // search → JSON; if search text isn't clean JSON, reformat with a no-tool call.
-async function searchForJSON(searchPrompt, schemaHint, onLog, apiKey) {
+async function searchForJSON(searchPrompt, schemaHint, onLog, apiKey, maxUses = 5) {
   const text = await runSearch(
     `${searchPrompt}\n\nWhen finished searching, reply with ONLY this JSON and nothing else: ${schemaHint}`,
-    onLog, apiKey
+    onLog, apiKey, maxUses
   );
   try { return extractJSON(text); }
   catch {
@@ -338,6 +340,18 @@ const MATCH_SCHEMA = '{"played":true,"score":"2-1","pens":null,"scorers":[{"team
 async function fetchMatchDetails(matchDesc, onLog, apiKey) {
   const prompt = `Find the result of the 2026 FIFA World Cup match ${matchDesc}: the final score, every goalscorer with minute (mark penalties and own goals), and every yellow and red card with player name and minute. Use "home" or "away" to say which team for each event. If the match has not been played yet, the JSON is simply {"played":false}.`;
   return searchForJSON(prompt, MATCH_SCHEMA, onLog, apiKey);
+}
+
+// Batched fetch: ALL pending matches in ONE search conversation.
+// Far fewer input tokens than one search per match (avoids the per-minute rate limit).
+// `list` is [{ id, desc }]. Returns { [id]: {played, score, scorers, cards} }.
+async function fetchManyMatches(list, onLog, apiKey) {
+  const matchLines = list.map(x => `${x.id}: ${x.desc}`).join("\n");
+  const schema = '{"matches":{"g13":{"played":true,"score":"2-1","scorers":[{"team":"home","player":"Name","minute":"45","pen":false,"og":false}],"cards":[{"team":"away","player":"Name","minute":"60","card":"yellow"}]}}}';
+  const prompt = `Search the web for the final results of these 2026 FIFA World Cup matches. For each one that has finished, find the exact final score (home-away), every goalscorer with minute (pen:true for penalties, og:true for own goals), and every yellow/red card with player and minute. Use "home" or "away" for each event's team. Omit any match that has not been played yet.\n\nMATCHES:\n${matchLines}`;
+  // Cap searches low to stay under low-tier per-minute input-token limits.
+  const j = await searchForJSON(prompt, schema, onLog, apiKey, 4);
+  return (j && j.matches) || {};
 }
 
 /* best-effort persistence (window.storage may not exist) */
@@ -671,20 +685,41 @@ export default function WorldCup2026Schedule() {
     });
     if (pending.length === 0) { setUpdateStatus("All scores up to date ✓"); setTimeout(() => setUpdateStatus(null), 3000); return; }
     setUpdateBusy(true);
-    let got = 0, fail = 0, lastErr = null;
-    for (let i = 0; i < pending.length; i++) {
-      setUpdateStatus(`Fetching ${i + 1}/${pending.length}…`);
-      const r = await fetchDetails(pending[i], { silent: true, force: true });
-      if (r && r.ok) got++;
-      else { fail++; if (r && r.error) lastErr = r.error; }
+    setUpdateStatus(`Searching ${pending.length} match${pending.length !== 1 ? "es" : ""}…`);
+    try {
+      // Build one batched request for all pending matches.
+      const list = pending.map(m => {
+        const hN = resolveSlot(m, "h"), aN = resolveSlot(m, "a");
+        const home = hN.team ? TEAMS[hN.team].name : hN.label;
+        const away = aN.team ? TEAMS[aN.team].name : aN.label;
+        const when = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", day: "numeric", month: "long", year: "numeric" }).format(m.ko);
+        const venue = VENUES[m.v];
+        return { id: m.id, desc: `${home} vs ${away} on ${when} at ${venue.stadium}, ${venue.city}` };
+      });
+      const results = await fetchManyMatches(list, () => {}, apiKey);
+      let got = 0;
+      setDetails(d => {
+        const next = { ...d };
+        for (const m of pending) {
+          const r = results[m.id];
+          if (r && r.played !== false && r.score) {
+            next[m.id] = { ...r, played: true, done: true };
+            got++;
+          }
+        }
+        return next;
+      });
+      setUpdateStatus(`Got ${got} score${got !== 1 ? "s" : ""}${got < pending.length ? `, ${pending.length - got} not finished yet` : ""} ✓`);
+    } catch (e) {
+      const msg = /rate limit/i.test(e.message)
+        ? "Rate limit hit — wait a minute and tap ↻ Scores again."
+        : `Error: ${e.message}`;
+      setUpdateStatus(msg);
+    } finally {
+      setUpdateBusy(false);
+      setTimeout(() => setUpdateStatus(null), 9000);
     }
-    setUpdateBusy(false);
-    setUpdateStatus(
-      lastErr ? `Error: ${lastErr}`
-      : `Got ${got} score${got !== 1 ? "s" : ""}${fail ? `, ${fail} not finished` : ""} ✓`
-    );
-    setTimeout(() => setUpdateStatus(null), 8000);
-  }, [updateBusy, details, fetchDetails]);
+  }, [updateBusy, details, resolveSlot, apiKey]);
 
   // AUTO-UPDATE: every 5 minutes, find matches that finished (kickoff + 2.5h)
   // but don't yet have verified data (done:true), and fetch silently.
