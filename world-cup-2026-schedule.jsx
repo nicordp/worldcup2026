@@ -500,6 +500,8 @@ export default function WorldCup2026Schedule() {
   const [infoErr, setInfoErr] = useState(null);
   const [apiLog, setApiLog] = useState([]);
   const [apiKey, setApiKey] = useState(() => { try { return localStorage.getItem("wc26-apikey") || ""; } catch { return ""; } });
+  const [updateBusy, setUpdateBusy] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState(null);
   const [standings, setStandings] = useState(null);
   const [standingsAt, setStandingsAt] = useState(null);
   const [standingsBusy, setStandingsBusy] = useState(false);
@@ -647,7 +649,7 @@ export default function WorldCup2026Schedule() {
     } finally {
       if (!silent) setLoadingInfo(false);
     }
-  }, [details, now, resolveSlot]);
+  }, [details, now, resolveSlot, apiKey]);
 
   const openInfo = useCallback(async (m) => {
     setInfo(m.id);
@@ -655,6 +657,27 @@ export default function WorldCup2026Schedule() {
     setApiLog([]);
     fetchDetails(m, { silent: false });
   }, [fetchDetails]);
+
+  /* ---------- manual "Update Scores" button ---------- */
+  const updateAllScores = useCallback(async () => {
+    if (updateBusy) return;
+    const pending = MATCHES.filter(m => {
+      if (!(Date.now() > m.ko + PLAYED_AFTER_MS)) return false;
+      const d = details[m.id];
+      return !d || !d.done;
+    });
+    if (pending.length === 0) { setUpdateStatus("All scores up to date ✓"); setTimeout(() => setUpdateStatus(null), 3000); return; }
+    setUpdateBusy(true);
+    let done = 0;
+    for (const m of pending) {
+      setUpdateStatus(`Fetching ${done + 1}/${pending.length}…`);
+      try { await fetchDetails(m, { silent: true }); } catch {}
+      done++;
+    }
+    setUpdateBusy(false);
+    setUpdateStatus(`Updated ${done} match${done !== 1 ? "es" : ""} ✓`);
+    setTimeout(() => setUpdateStatus(null), 4000);
+  }, [updateBusy, details, fetchDetails]);
 
   // AUTO-UPDATE: every 5 minutes, find matches that finished (kickoff + 2.5h)
   // but don't yet have verified data (done:true), and fetch silently.
@@ -743,10 +766,14 @@ export default function WorldCup2026Schedule() {
               {CITIES.map(([name, zone]) => <option key={zone} value={zone}>{name}</option>)}
             </select>
           </label>
+          <button className="btn" onClick={updateAllScores} disabled={updateBusy || !apiKey}>
+            {updateBusy ? (updateStatus || "Fetching…") : "↻ Scores"}
+          </button>
           <button className="btn" onClick={() => refreshStandings(standings, false)} disabled={standingsBusy}>
             {standingsBusy ? "Updating…" : "↻ Standings"}
           </button>
           <button className="btn" onClick={() => setSettingsOpen(true)}>⚙ Settings</button>
+          {updateStatus && !updateBusy && <span className="soft" style={{fontSize:11}}>{updateStatus}</span>}
         </div>
       </header>
 
