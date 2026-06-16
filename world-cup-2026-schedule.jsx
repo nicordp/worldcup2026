@@ -258,18 +258,17 @@ function extractJSON(text) {
    and they fail silently so a flaky/unavailable web-search tool
    never breaks the UI.
 --------------------------------------------------------------- */
-const API_HEADERS = {
-  "Content-Type": "application/json",
-  "anthropic-dangerous-direct-browser-access": "true",
-};
-
-async function rawPost(body) {
+async function rawPost(body, apiKey) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), 90000);
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: API_HEADERS,
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-dangerous-direct-browser-access": "true",
+        ...(apiKey ? { "x-api-key": apiKey } : {}),
+      },
       body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, ...body }),
       signal: ctrl.signal,
     });
@@ -295,14 +294,14 @@ function sealContent(content) {
 }
 
 // Web-search-enabled conversation that follows pause_turn until text arrives.
-async function runSearch(prompt, onLog) {
+async function runSearch(prompt, onLog, apiKey) {
   let messages = [{ role: "user", content: prompt }];
   for (let turn = 0; turn < 8; turn++) {
     onLog(`search ${turn + 1}…`);
     const data = await rawPost({
       messages,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6 }],
-    });
+    }, apiKey);
     const types = (data.content || []).map(b => b.type).join(",");
     onLog(`${data.stop_reason} [${types}]`);
     if (data.stop_reason === "pause_turn") {
@@ -317,10 +316,10 @@ async function runSearch(prompt, onLog) {
 }
 
 // search → JSON; if search text isn't clean JSON, reformat with a no-tool call.
-async function searchForJSON(searchPrompt, schemaHint, onLog) {
+async function searchForJSON(searchPrompt, schemaHint, onLog, apiKey) {
   const text = await runSearch(
     `${searchPrompt}\n\nWhen finished searching, reply with ONLY this JSON and nothing else: ${schemaHint}`,
-    onLog
+    onLog, apiKey
   );
   try { return extractJSON(text); }
   catch {
@@ -328,24 +327,24 @@ async function searchForJSON(searchPrompt, schemaHint, onLog) {
     const d = await rawPost({
       system: "You output ONLY raw minified JSON. No prose, no markdown, no code fences.",
       messages: [{ role: "user", content: `Extract exactly this JSON shape: ${schemaHint}\n\nfrom this text:\n${text.slice(0, 4000)}\n\nOutput only the JSON object.` }],
-    });
+    }, apiKey);
     return extractJSON(textFrom(d.content));
   }
 }
 
 const MATCH_SCHEMA = '{"played":true,"score":"2-1","pens":null,"scorers":[{"team":"home","player":"Name","minute":"45","pen":false,"og":false}],"cards":[{"team":"away","player":"Name","minute":"60","card":"yellow"}]}';
 
-async function fetchMatchDetails(matchDesc, onLog) {
+async function fetchMatchDetails(matchDesc, onLog, apiKey) {
   const prompt = `Find the result of the 2026 FIFA World Cup match ${matchDesc}: the final score, every goalscorer with minute (mark penalties and own goals), and every yellow and red card with player name and minute. Use "home" or "away" to say which team for each event. If the match has not been played yet, the JSON is simply {"played":false}.`;
-  return searchForJSON(prompt, MATCH_SCHEMA, onLog);
+  return searchForJSON(prompt, MATCH_SCHEMA, onLog, apiKey);
 }
 
 /* best-effort persistence (window.storage may not exist) */
 async function loadStored(key) {
-  try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; } catch { return null; }
+  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 async function saveStored(key, val) {
-  try { await window.storage.set(key, JSON.stringify(val)); } catch { /* non-fatal */ }
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* non-fatal */ }
 }
 
 /* ============================================================ */
@@ -500,6 +499,7 @@ export default function WorldCup2026Schedule() {
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [infoErr, setInfoErr] = useState(null);
   const [apiLog, setApiLog] = useState([]);
+  const [apiKey, setApiKey] = useState(() => { try { return localStorage.getItem("wc26-apikey") || ""; } catch { return ""; } });
   const [standings, setStandings] = useState(null);
   const [standingsAt, setStandingsAt] = useState(null);
   const [standingsBusy, setStandingsBusy] = useState(false);
@@ -563,7 +563,7 @@ export default function WorldCup2026Schedule() {
       const today = new Date().toUTCString();
       const question = `Today is ${today}. Find the CURRENT 2026 FIFA World Cup group-stage standings for ALL groups A through L (table order 1st to 4th, all four teams each), plus any officially confirmed Round-of-32 or later knockout pairings. Use exactly these team names where possible: ${names}.`;
       const schema = `{"groups":{"A":{"complete":false,"order":["Mexico","South Korea","Czechia","South Africa"]}},"knockout":{"73":{"home":"TeamName","away":"TeamName"}}} (include all 12 groups A-L; complete=true only when that group finished all 3 matchdays; knockout only for officially confirmed pairings)`;
-      const j = await searchForJSON(question, schema, () => {});
+      const j = await searchForJSON(question, schema, () => {}, apiKey);
       const groups = {};
       Object.entries(j.groups || {}).forEach(([g, v]) => {
         if (!GROUPS[g]) return;
@@ -586,7 +586,7 @@ export default function WorldCup2026Schedule() {
     } finally {
       setStandingsBusy(false);
     }
-  }, [standingsBusy]);
+  }, [standingsBusy, apiKey]);
 
   /* ---------- slot resolution ---------- */
   const resolveSlot = useCallback((m, which) => {
@@ -634,7 +634,7 @@ export default function WorldCup2026Schedule() {
       const when = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", day: "numeric", month: "long", year: "numeric" }).format(m.ko);
       const venue = VENUES[m.v];
       const matchDesc = `${home} vs ${away} on ${when} at ${venue.stadium}, ${venue.city}`;
-      const j = await fetchMatchDetails(matchDesc, logLine);
+      const j = await fetchMatchDetails(matchDesc, logLine, apiKey);
       // Preserve hardcoded score if API returns no score but we have one
       const existing = details[m.id];
       const merged = (existing && existing.score && (!j.score)) ? { ...j, score: existing.score } : j;
@@ -824,7 +824,7 @@ export default function WorldCup2026Schedule() {
       {/* ---------- settings ---------- */}
       {settingsOpen && (
         <Modal onClose={() => setSettingsOpen(false)} label="Settings">
-          <Settings favs={favs} setFavs={setFavs} rankThresh={rankThresh} setRankThresh={setRankThresh} />
+          <Settings favs={favs} setFavs={setFavs} rankThresh={rankThresh} setRankThresh={setRankThresh} apiKey={apiKey} setApiKey={k => { setApiKey(k); try { localStorage.setItem("wc26-apikey", k); } catch {} }} />
         </Modal>
       )}
     </div>
@@ -971,7 +971,7 @@ function InfoCard({ m, tz, cityName, played, det, loading, err, apiLog, resolve,
   );
 }
 
-function Settings({ favs, setFavs, rankThresh, setRankThresh }) {
+function Settings({ favs, setFavs, rankThresh, setRankThresh, apiKey, setApiKey }) {
   const [pick, setPick] = useState("BRA");
   const [color, setColor] = useState(PALETTE[3]);
   const available = Object.keys(TEAMS).filter((key) => !favs.some((f) => f.team === key))
@@ -980,6 +980,16 @@ function Settings({ favs, setFavs, rankThresh, setRankThresh }) {
   return (
     <div className="card">
       <h3>Settings</h3>
+
+      <h4 className="sethead">Anthropic API Key</h4>
+      <p className="hint">Required for live standings and match detail lookups. Get yours at console.anthropic.com. Stored only in your browser.</p>
+      <input
+        type="password"
+        placeholder="sk-ant-…"
+        value={apiKey}
+        onChange={e => setApiKey(e.target.value)}
+        style={{width:"100%",marginBottom:8}}
+      />
 
       <h4 className="sethead">Favourite teams</h4>
       <p className="hint">Their matches get a left border in the team's colour.</p>
