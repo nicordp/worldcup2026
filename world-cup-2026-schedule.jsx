@@ -621,9 +621,9 @@ export default function WorldCup2026Schedule() {
 
   /* ---------- match details via Claude API ---------- */
   const fetchDetails = useCallback(async (m, opts = {}) => {
-    const { silent = false } = opts;
+    const { silent = false, force = false } = opts;
     const cached = details[m.id];
-    if (cached && (cached.done || !cached.partial)) return; // verified or already-full
+    if (!force && cached && (cached.done || !cached.partial)) return; // verified or already-full
     if (!(now > m.ko + PLAYED_AFTER_MS)) return; // not played
     if (!silent) { setLoadingInfo(true); setInfoErr(null); setApiLog([]); }
     const logLine = (line) => {
@@ -671,7 +671,7 @@ export default function WorldCup2026Schedule() {
     let done = 0;
     for (const m of pending) {
       setUpdateStatus(`Fetching ${done + 1}/${pending.length}…`);
-      try { await fetchDetails(m, { silent: true }); } catch {}
+      try { await fetchDetails(m, { silent: true, force: true }); } catch {}
       done++;
     }
     setUpdateBusy(false);
