@@ -1,0 +1,514 @@
+{
+  "updated": "2026-06-15T07:00:00Z",
+  "matches": {
+    "g1": {
+      "played": true,
+      "done": true,
+      "score": "2-0",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "J. Quinones",
+          "minute": "9",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "R. Jimenez",
+          "minute": "52",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "B. Gutierrez",
+          "minute": "34",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "T. Mokoena",
+          "minute": "43",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "S. Sithole",
+          "minute": "49",
+          "card": "red"
+        },
+        {
+          "team": "away",
+          "player": "T. Zwane",
+          "minute": "84",
+          "card": "red"
+        },
+        {
+          "team": "home",
+          "player": "C. Montes",
+          "minute": "90+2",
+          "card": "red"
+        }
+      ]
+    },
+    "g2": {
+      "played": true,
+      "done": true,
+      "score": "2-1",
+      "scorers": [
+        {
+          "team": "away",
+          "player": "L. Krejci",
+          "minute": "59",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "Hwang In-beom",
+          "minute": "67",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "Oh Hyeon-gyu",
+          "minute": "80",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "Lee Gi-hyuk",
+          "minute": "88",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g3": {
+      "played": true,
+      "done": true,
+      "score": "1-1",
+      "scorers": [
+        {
+          "team": "away",
+          "player": "J. Lukic",
+          "minute": "21",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "C. Larin",
+          "minute": "78",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "A. Johnston",
+          "minute": "11",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "N. Katic",
+          "minute": "90+3",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g4": {
+      "played": true,
+      "done": true,
+      "score": "4-1",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "D. Bobadilla",
+          "minute": "7",
+          "pen": false,
+          "og": true
+        },
+        {
+          "team": "home",
+          "player": "F. Balogun",
+          "minute": "30",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "F. Balogun",
+          "minute": "45+2",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "away",
+          "player": "Mauricio",
+          "minute": "73",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "G. Reyna",
+          "minute": "90+7",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "away",
+          "player": "J.J. Caceres",
+          "minute": "9",
+          "card": "yellow"
+        },
+        {
+          "team": "home",
+          "player": "T. Adams",
+          "minute": "59",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "Alonso",
+          "minute": "88",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g5": {
+      "played": true,
+      "done": true,
+      "score": "1-1",
+      "scorers": [
+        {
+          "team": "away",
+          "player": "B. Embolo",
+          "minute": "17",
+          "pen": true,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "B. Khoukhi",
+          "minute": "90+5",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "M. Abunada",
+          "minute": "16",
+          "card": "yellow"
+        },
+        {
+          "team": "home",
+          "player": "J.G. Abdulsallam",
+          "minute": "22",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "D. Zakaria",
+          "minute": "41",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g6": {
+      "played": true,
+      "done": true,
+      "score": "1-1",
+      "scorers": [
+        {
+          "team": "away",
+          "player": "I. Saibari",
+          "minute": "21",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "Vinicius Jr",
+          "minute": "32",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "Casemiro",
+          "minute": "37",
+          "card": "yellow"
+        },
+        {
+          "team": "home",
+          "player": "R. Ibanez",
+          "minute": "43",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g7": {
+      "played": true,
+      "done": true,
+      "score": "0-1",
+      "scorers": [
+        {
+          "team": "away",
+          "player": "J. McGinn",
+          "minute": "28",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "J-R. Bellegarde",
+          "minute": "38",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "A. Hickey",
+          "minute": "65",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "K. McLean",
+          "minute": "82",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "F. Curtis",
+          "minute": "90+3",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g8": {
+      "played": true,
+      "done": true,
+      "score": "2-0",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "N. Irankunda",
+          "minute": "27",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "C. Metcalfe",
+          "minute": "75",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "away",
+          "player": "Y. Akgun",
+          "minute": "62",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g9": {
+      "played": true,
+      "done": true,
+      "score": "7-1",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "F. Nmecha",
+          "minute": "6",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "away",
+          "player": "L. Comenencia",
+          "minute": "21",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "N. Schlotterbeck",
+          "minute": "38",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "K. Havertz",
+          "minute": "45+5",
+          "pen": true,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "J. Musiala",
+          "minute": "47",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "N. Brown",
+          "minute": "68",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "D. Undav",
+          "minute": "78",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "K. Havertz",
+          "minute": "88",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": []
+    },
+    "g10": {
+      "played": true,
+      "done": true,
+      "score": "2-2",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "V. van Dijk",
+          "minute": "50",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "away",
+          "player": "K. Nakamura",
+          "minute": "57",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "C. Summerville",
+          "minute": "64",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "away",
+          "player": "D. Kamada",
+          "minute": "89",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": []
+    },
+    "g11": {
+      "played": true,
+      "done": true,
+      "score": "1-0",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "A. Diallo",
+          "minute": "90",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": [
+        {
+          "team": "home",
+          "player": "F. Kessie",
+          "minute": "27",
+          "card": "yellow"
+        },
+        {
+          "team": "away",
+          "player": "J. Porozo",
+          "minute": "73",
+          "card": "yellow"
+        }
+      ]
+    },
+    "g12": {
+      "played": true,
+      "done": true,
+      "score": "5-1",
+      "scorers": [
+        {
+          "team": "home",
+          "player": "Y. Ayari",
+          "minute": "7",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "A. Isak",
+          "minute": "30",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "away",
+          "player": "O. Rekik",
+          "minute": "43",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "V. Gyokeres",
+          "minute": "59",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "M. Svanberg",
+          "minute": "84",
+          "pen": false,
+          "og": false
+        },
+        {
+          "team": "home",
+          "player": "Y. Ayari",
+          "minute": "90+6",
+          "pen": false,
+          "og": false
+        }
+      ],
+      "cards": []
+    }
+  }
+}

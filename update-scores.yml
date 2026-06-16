@@ -1,0 +1,39 @@
+name: Update World Cup Scores
+
+on:
+  # Runs every day at 7:00 UTC = 4:00 AM Argentina time (UTC-3)
+  schedule:
+    - cron: '0 7 * * *'
+
+  # Also lets you trigger it manually from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  update-scores:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # needed to commit scores.json back to the repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch latest World Cup scores
+        run: node update-scores.js
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit updated scores
+        run: |
+          git config user.name  "World Cup Bot"
+          git config user.email "bot@worldcup.app"
+          git add scores.json
+          # Only commit if something actually changed
+          git diff --staged --quiet || git commit -m "Update scores $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
